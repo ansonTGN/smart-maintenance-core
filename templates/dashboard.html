@@ -662,7 +662,7 @@
         const isGraphQuery = {{ results.is_graph | json_encode() }};
         let network = null, selectedNodeData = null;
 
-        if (isGraphQuery && document.getElementById('network-container')) {
+if (isGraphQuery && document.getElementById('network-container')) {
             const nodes = new Map(), edges = [];
             rows.forEach(r => {
                 const keys = Object.keys(r);
@@ -670,19 +670,89 @@
                 const bIdKey = keys.find(k => k.includes('B_ID'));
                 const aLabelKey = keys.find(k => k.includes('A_LABEL') || k === 'NAME' || k === 'DESCRIPCION' || k === 'EQUIPO');
                 const bLabelKey = keys.find(k => k.includes('B_LABEL'));
-                const aId = r[aIdKey] || r.ID; const aLabel = r[aLabelKey] || aId;
                 
+                const aId = r[aIdKey] || r.ID; 
+                const aLabel = r[aLabelKey] || aId;
+                
+                // Color por grupo para diferenciar visualmente
                 if(aId && !nodes.has(aId)) nodes.set(aId, {id:aId, label:aLabel, group:r.A_TYPE||'Default'});
                 
                 if(bIdKey && r[bIdKey]) {
-                    const bId = r[bIdKey]; const bLabel = r[bLabelKey] || bId;
+                    const bId = r[bIdKey]; 
+                    const bLabel = r[bLabelKey] || bId;
                     if(!nodes.has(bId)) nodes.set(bId, {id:bId, label:bLabel, group:r.B_TYPE||'Default'});
                     edges.push({from:aId, to:bId, label:r.RELACION||'', arrows:'to'});
                 }
             });
+
+            // --- MEJORA VISUALIZACIÓN GRAFO ---
+            const options = {
+                nodes: {
+                    shape: 'dot',
+                    size: 16,
+                    font: { face: 'Segoe UI', size: 14, strokeWidth: 2, strokeColor: '#ffffff' },
+                    borderWidth: 2,
+                    shadow: true
+                },
+                edges: {
+                    width: 1,
+                    color: { inherit: 'from', opacity: 0.6 },
+                    smooth: { type: 'continuous' } // Líneas curvas más limpias
+                },
+                physics: {
+                    // ForceAtlas2Based es mucho mejor para grafos grandes que BarnesHut
+                    solver: 'forceAtlas2Based',
+                    forceAtlas2Based: {
+                        gravitationalConstant: -50, // Repulsión moderada
+                        centralGravity: 0.01,       // Gravedad baja para expandir el grafo
+                        springLength: 100,
+                        springConstant: 0.08,
+                        damping: 0.4                // Amortiguación alta para evitar vibración
+                    },
+                    maxVelocity: 50,
+                    minVelocity: 0.1, // IMPORTANTE: Detiene la física cuando el movimiento es bajo
+                    stabilization: {
+                        enabled: true,
+                        iterations: 1000, // Calcula 1000 iteraciones antes de mostrarlo (evita la explosión inicial)
+                        updateInterval: 25,
+                        onlyDynamicEdges: false,
+                        fit: true
+                    },
+                    timestep: 0.5,
+                    adaptiveTimestep: true
+                },
+                interaction: {
+                    hover: true,
+                    tooltipDelay: 200,
+                    hideEdgesOnDrag: true // Mejora rendimiento al mover nodos
+                },
+                layout: {
+                    improvedLayout: false // Desactivar para grafos muy grandes (mejora rendimiento)
+                }
+            };
+
             network = new vis.Network(document.getElementById('network-container'), {
                 nodes: new vis.DataSet(Array.from(nodes.values())), edges: new vis.DataSet(edges)
-            }, { nodes: { shape: 'dot', font: { face: 'Segoe UI' } }, physics: { stabilization: false }, layout: { improvedLayout: true } });
+            }, options);
+
+            // Evento para detener completamente la física una vez estabilizado
+            network.on("stabilizationIterationsDone", function () {
+                network.setOptions( { physics: false } );
+            });
+
+            // Reactivar física suavemente si el usuario arrastra un nodo
+            network.on("dragStart", function (params) {
+                network.setOptions( { physics: true } );
+            });
+            
+            // Volver a congelar al soltar
+            network.on("dragEnd", function (params) {
+                // Pequeño timeout para dejar que se acomode y luego congelar
+                setTimeout(() => {
+                    network.setOptions( { physics: false } );
+                }, 1000);
+            });
+
             network.on("click", p => {
                 if(p.nodes.length) {
                     const n = nodes.get(p.nodes[0]); 
