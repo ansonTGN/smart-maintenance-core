@@ -2,7 +2,7 @@
 
 {% block content %}
 <style>
-    /* --- TEMA VISUAL: TAM 4 STYLE --- */
+    /* --- TEMA VISUAL: NEXUS STYLE --- */
     :root {
         --sidebar-bg: #2c3e50;
         --sidebar-width: 280px;
@@ -63,6 +63,10 @@
         padding: 15px 20px; background-color: rgba(0,0,0,0.3);
         font-size: 0.8rem; border-top: 1px solid rgba(255,255,255,0.1);
     }
+    
+    /* Enlace del autor */
+    .author-link { color: #fff; text-decoration: none; transition: color 0.2s; }
+    .author-link:hover { color: var(--primary-accent); text-decoration: underline; }
 
     /* --- CONTENIDO --- */
     .main-content {
@@ -81,10 +85,10 @@
     }
 
     .filters-bar {
-        padding: 15px 20px 0 20px; background-color: #fcfcfc;
+        padding: 15px 20px 15px 20px; background-color: #fcfcfc;
         border-bottom: 1px solid var(--border-color);
     }
-    .filter-tabs { display: flex; gap: 30px; }
+    .filter-tabs { display: flex; gap: 30px; margin-bottom: 10px;}
     .filter-tab {
         padding-bottom: 10px; font-size: 0.9rem; color: #7f8c8d;
         font-weight: 600; text-transform: uppercase;
@@ -96,7 +100,14 @@
         flex-grow: 1; overflow-y: auto; padding: 20px; background-color: var(--bg-body);
     }
 
-    /* --- TABLA TAM 4 (DINÁMICA) --- */
+    /* --- ESTILOS DE BÚSQUEDA --- */
+    .query-indicator {
+        font-size: 0.75rem; color: var(--primary-accent); 
+        font-weight: bold; text-transform: uppercase; margin-bottom: 5px;
+        display: block;
+    }
+
+    /* --- TABLA DINÁMICA --- */
     .tree-table {
         background: #fff; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         width: 100%; border-collapse: collapse; white-space: nowrap;
@@ -114,7 +125,6 @@
     
     .node-icon { color: var(--folder-icon-color); margin-right: 8px; }
     
-    /* Clases utilitarias para columnas dinámicas */
     .col-numeric { text-align: right; font-family: 'Roboto Mono', monospace; color: #2c3e50; }
     .col-badge span { font-size: 0.75rem; padding: 3px 8px; border-radius: 12px; }
     .col-main { font-weight: 600; color: #2c3e50; }
@@ -142,17 +152,11 @@
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-brand">
             <div class="d-flex justify-content-between align-items-center">
-                <div><div class="brand-title">TAM 4</div><div class="brand-subtitle text-white-50">v2024.34.6</div></div>
+                <!-- TÍTULO CAMBIADO A NEXUS 1 -->
+                <div><div class="brand-title">Nexus 1</div><div class="brand-subtitle text-white-50">v2024.34.6</div></div>
                 <button class="btn btn-sm text-white d-lg-none" onclick="toggleSidebar()"><i class="fa-solid fa-times"></i></button>
             </div>
-            <div class="mt-2 text-white-50 small" style="font-size: 0.7rem;">Nexus Industrial Graph Analytics</div>
-        </div>
-
-        <div class="p-3">
-            <div class="input-group input-group-sm">
-                <span class="input-group-text bg-secondary border-0 text-white"><i class="fa-solid fa-magnifying-glass"></i></span>
-                <input type="text" class="form-control bg-secondary border-0 text-white" placeholder="Buscar..." style="--bs-bg-opacity: .4; color:white::placeholder;">
-            </div>
+            <div class="mt-2 text-white-50 small" style="font-size: 0.7rem;">Industrial Graph Analytics</div>
         </div>
 
         <nav class="sidebar-menu">
@@ -180,7 +184,13 @@
                 <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-2" style="width:30px; height:30px;">
                     <i class="fa-solid fa-user text-white" style="font-size: 0.8rem;"></i>
                 </div>
-                <div><div class="fw-bold">Angel A. Urbina</div><div style="font-size: 0.7rem; opacity: 0.6;">Autor / Developer</div></div>
+                <div>
+                    <!-- AUTOR CON ENLACE -->
+                    <a href="https://angelurbinacv.netlify.app/" target="_blank" class="author-link">
+                        <div class="fw-bold">Angel A. Urbina</div>
+                    </a>
+                    <div style="font-size: 0.7rem; opacity: 0.6;">Autor / Developer</div>
+                </div>
             </div>
         </div>
     </aside>
@@ -191,7 +201,7 @@
             <div class="header-title">
                 <button class="btn btn-link text-dark d-lg-none me-2 p-0" onclick="toggleSidebar()"><i class="fa-solid fa-bars fa-lg"></i></button>
                 <i class="fa-solid fa-folder-tree text-secondary"></i>
-                <span id="headerTitleText">{% if results %} {{ results.query_title }} {% else %} Navegación del Árbol {% endif %}</span>
+                <span id="headerTitleText">{% if results %} {{ results.query_title }} {% else %} Selecciona una consulta {% endif %}</span>
             </div>
             <div class="d-flex align-items-center gap-3">
                 <img src="https://flagcdn.com/w20/es.png" alt="ES" class="rounded-1" style="opacity: 0.8;">
@@ -201,34 +211,50 @@
             </div>
         </header>
 
+        <!-- BARRA DE ACCIÓN Y FILTROS -->
         <div class="filters-bar">
-            <div class="row align-items-end">
-                <div class="col-md-8">
+            <div class="row">
+                <!-- Tabs Visuales -->
+                <div class="col-md-7">
                     <div class="filter-tabs">
-                        <div class="filter-tab active"><i class="fa-solid fa-globe me-1"></i> FILTROS GEOGRÁFICOS <div style="font-size: 0.7rem; color: #95a5a6; font-weight: normal; margin-top:2px;">plant es <strong>03(022)</strong></div></div>
-                        <div class="filter-tab"><i class="fa-solid fa-layer-group me-1"></i> CATEGORÍA</div>
+                        <div class="filter-tab active"><i class="fa-solid fa-globe me-1"></i> FILTROS <div style="font-size: 0.7rem; color: #95a5a6; font-weight: normal; margin-top:2px;">plant es <strong>03(022)</strong></div></div>
+                        <div class="filter-tab"><i class="fa-solid fa-layer-group me-1"></i> VISTA</div>
                     </div>
                 </div>
-                <div class="col-md-4 pb-2">
-                     <form id="searchForm" action="/query" method="POST" class="d-flex gap-2">
+                
+                <!-- FORMULARIO DE EJECUCIÓN -->
+                <div class="col-md-5">
+                     <form id="searchForm" action="/query" method="POST">
                         <input type="hidden" name="query_id" id="hiddenQueryId" value="{{ current_query | default(value='M01') }}">
-                        <div style="flex-grow: 1;"><select id="select-param" name="param" placeholder="Buscar nodo..." style="width: 100%;"></select></div>
-                        <button type="submit" class="btn btn-primary btn-sm"><i class="fa-solid fa-arrow-right"></i></button>
+                        
+                        <span class="query-indicator" id="queryIndicator">
+                            <i class="fa-solid fa-wrench me-1"></i> 
+                            <span id="queryNameLabel">{% if results %}{{ results.query_title }}{% else %}Selecciona en el menú...{% endif %}</span>
+                        </span>
+
+                        <div class="d-flex gap-2">
+                            <div style="flex-grow: 1;">
+                                <select id="select-param" name="param" placeholder="Parámetro (opcional)..." style="width: 100%;"></select>
+                            </div>
+                            <button type="submit" class="btn btn-primary fw-bold px-3">
+                                <i class="fa-solid fa-bolt me-1"></i> EJECUTAR
+                            </button>
+                        </div>
                     </form>
                 </div>
             </div>
         </div>
 
         <div class="workspace">
+            <!-- Barra de Herramientas de la Tabla -->
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <div class="d-flex gap-2">
-                    <span class="badge bg-white text-dark border p-2">categorías: <strong>Dinámica</strong></span>
-                    <button class="btn btn-link btn-sm text-secondary text-decoration-none">Establecer como filtro</button>
+                    <span class="badge bg-white text-dark border p-2">Estado: <strong>Conectado</strong></span>
                 </div>
-                <div class="btn-group">
-                    <button class="btn btn-sm btn-outline-secondary bg-white" title="Exportar CSV" onclick="exportCSV()"><i class="fa-solid fa-file-csv"></i></button>
-                    <button class="btn btn-sm btn-outline-secondary bg-white" title="Descargar PNG" onclick="downloadGraphPNG()"><i class="fa-solid fa-camera"></i></button>
-                    <button class="btn btn-sm btn-outline-secondary bg-white" title="Gráficos" data-bs-toggle="modal" data-bs-target="#statsModal"><i class="fa-solid fa-chart-pie"></i></button>
+                <div class="btn-group shadow-sm">
+                    <button class="btn btn-sm btn-light border" title="Exportar CSV" onclick="exportCSV()"><i class="fa-solid fa-file-csv text-success"></i> CSV</button>
+                    <button class="btn btn-sm btn-light border" title="Descargar PNG" onclick="downloadGraphPNG()"><i class="fa-solid fa-image text-primary"></i> PNG</button>
+                    <button class="btn btn-sm btn-light border" title="Gráficos" data-bs-toggle="modal" data-bs-target="#statsModal"><i class="fa-solid fa-chart-pie text-danger"></i> Stats</button>
                 </div>
             </div>
 
@@ -240,25 +266,22 @@
                         <div class="text-center small text-muted mt-2"><i class="fa-solid fa-circle-info"></i> Usa el scroll para zoom y arrastra los nodos.</div>
                     </div>
                 {% else %}
-                    <!-- VISTA TABLA DINÁMICA MEJORADA -->
+                    <!-- VISTA TABLA DINÁMICA -->
                     <div class="table-responsive bg-white rounded shadow-sm border" style="min-height: 400px;">
                         <table class="tree-table">
                             <thead>
                                 <tr>
-                                    <!-- Cabecera Dinámica corregida -->
                                     {% for col in results.columns %}
                                         <th class="{% if 'PRECIO' in col or 'COSTO' in col or 'STOCK' in col or 'CANT' in col or 'TOTAL' in col %}text-end{% endif %}">
                                             {{ col | replace(from="_", to=" ") }}
-                                            {% if 'PRECIO' in col or 'COSTO' in col %}<i class="fa-solid fa-euro-sign ms-1 text-muted" style="font-size:0.7em;"></i>{% endif %}
                                         </th>
                                     {% endfor %}
-                                    <th style="width: 50px;"></th> <!-- Columna Acciones -->
+                                    <th style="width: 50px;"></th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for row in results.rows %}
                                 
-                                {# Identificación inteligente de ID y Etiqueta para las acciones #}
                                 {% set row_id = row.ID | default(value=row.A_ID | default(value=row.CODIGO | default(value=row.MATERIAL | default(value="")))) %}
                                 {% set row_label = row.NAME | default(value=row.A_LABEL | default(value=row.DESCRIPCION | default(value=row.EQUIPO | default(value="")))) %}
 
@@ -266,9 +289,7 @@
                                     {% for col in results.columns %}
                                         {% set val = row[col] %}
                                         
-                                        <!-- Lógica de renderizado por tipo de columna (CORREGIDA CON 'in') -->
                                         {% if loop.first %}
-                                            <!-- PRIMERA COLUMNA: Estilo Árbol Principal -->
                                             <td class="col-main">
                                                 {% if row.B_TYPE and ("Equipo" in row.B_TYPE or "Ubicacion" in row.B_TYPE) %}
                                                     <i class="fa-regular fa-folder node-icon"></i>
@@ -277,43 +298,30 @@
                                                 {% endif %}
                                                 {{ val }}
                                             </td>
-
                                         {% elif 'TYPE' in col or 'TIPO' in col or 'STATUS' in col or 'ESTADO' in col %}
-                                            <!-- COLUMNAS TIPO/ESTADO: Badge -->
-                                            <td class="col-badge">
-                                                <span class="badge bg-light text-secondary border">{{ val }}</span>
-                                            </td>
-
+                                            <td class="col-badge"><span class="badge bg-light text-secondary border">{{ val }}</span></td>
                                         {% elif 'PRECIO' in col or 'COSTO' in col or 'STOCK' in col or 'CANT' in col or 'TOTAL' in col %}
-                                            <!-- COLUMNAS NUMÉRICAS: Alineación derecha -->
-                                            <td class="col-numeric">
-                                                {{ val }}
-                                            </td>
-
+                                            <td class="col-numeric">{{ val }}</td>
                                         {% else %}
-                                            <!-- RESTO: Normal -->
                                             <td>{{ val }}</td>
                                         {% endif %}
                                     {% endfor %}
 
-                                    <!-- Columna de Acciones -->
                                     <td class="text-center">
                                         <div class="dropdown">
                                             <button class="btn btn-link btn-sm text-secondary p-0" data-bs-toggle="dropdown"><i class="fa-solid fa-ellipsis-vertical"></i></button>
                                             <ul class="dropdown-menu dropdown-menu-end shadow border-0">
                                                 <li><a class="dropdown-item small" href="#"><i class="fa-solid fa-eye me-2"></i> Ver detalle</a></li>
                                                 {% if row_id %}
-                                                <li><a class="dropdown-item small" href="#" onclick="updateSearchParam('{{ row_id }}', '{{ row_label }}')"><i class="fa-solid fa-filter me-2"></i> Filtrar por: <b>{{ row_label }}</b></a></li>
+                                                <li><a class="dropdown-item small" href="#" onclick="updateSearchParam('{{ row_id }}', '{{ row_label }}')"><i class="fa-solid fa-filter me-2"></i> Usar como parámetro</a></li>
                                                 {% endif %}
                                             </ul>
                                         </div>
                                     </td>
                                 </tr>
                                 {% endfor %}
-                                
-                                <!-- Fila de Totales (Visual) -->
                                 <tr style="background-color: #fcfcfc; font-weight: bold; border-top: 2px solid #e9ecef;">
-                                    <td class="ps-3 text-muted">Resultados: {{ results.rows | length }}</td>
+                                    <td class="ps-3 text-muted">Total: {{ results.rows | length }} filas</td>
                                     <td colspan="{{ results.columns | length }}"></td>
                                 </tr>
                             </tbody>
@@ -322,42 +330,29 @@
                 {% endif %}
             {% else %}
                 <div class="d-flex flex-column align-items-center justify-content-center h-75 text-muted">
-                    <div class="bg-white p-5 rounded-circle shadow-sm mb-4"><i class="fa-solid fa-folder-tree fa-4x" style="color: #e0e0e0;"></i></div>
-                    <h4 class="fw-light">Selecciona una categoría del árbol</h4>
-                    <p class="small">Utiliza el menú lateral izquierdo o pregunta a la IA.</p>
+                    <div class="bg-white p-5 rounded-circle shadow-sm mb-4"><i class="fa-solid fa-magnifying-glass-chart fa-4x" style="color: #e0e0e0;"></i></div>
+                    <h4 class="fw-light">Listo para buscar</h4>
+                    <p class="small text-center">1. Selecciona una consulta en el menú lateral.<br>2. Escribe un parámetro (si hace falta).<br>3. Pulsa <b>EJECUTAR</b>.</p>
                 </div>
             {% endif %}
         </div>
     </main>
 </div>
 
-<!-- COMPONENTES ADICIONALES (IA, MODALS) -->
-<button class="btn btn-primary rounded-circle shadow-lg d-flex align-items-center justify-content-center" 
-        style="position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; z-index: 2000; border: 4px solid #fff;"
-        data-bs-toggle="modal" data-bs-target="#aiModal" title="Asistente IA"><i class="fa-solid fa-robot fa-xl"></i></button>
-
-<div class="modal fade" id="statsModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Estadísticas Rápidas</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><canvas id="mainChart" style="max-height: 400px;"></canvas></div></div></div></div>
+<!-- MODALS -->
+<div class="modal fade" id="statsModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Estadísticas</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><canvas id="mainChart" style="max-height: 400px;"></canvas></div></div></div></div>
 
 <div class="modal fade" id="aiModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
         <div class="modal-content border-0 shadow-lg" style="height: 80vh;">
             <div class="modal-header bg-dark text-white">
-                <h5 class="modal-title fs-6"><i class="fa-solid fa-brain me-2 text-info"></i> Asistente Nexus</h5>
-                <div class="ms-auto d-flex gap-2">
-                    <button class="btn btn-sm btn-outline-secondary text-white" type="button" data-bs-toggle="collapse" data-bs-target="#configPanel"><i class="fa-solid fa-gear"></i></button>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
+                <h5 class="modal-title fs-6"><i class="fa-solid fa-brain me-2 text-info"></i> Asistente IA</h5>
+                <div class="ms-auto"><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
             </div>
-            <div class="collapse bg-light border-bottom p-3" id="configPanel">
-                <div class="row g-2">
-                    <div class="col-12"><select id="aiProviderSelect" class="form-select form-select-sm" onchange="updateProviderSettings()"><option value="openai">OpenAI</option><option value="groq">Groq</option><option value="ollama">Ollama</option></select></div>
-                    <div class="col-6"><input type="text" id="aiBaseUrl" class="form-control form-control-sm" placeholder="URL"></div>
-                    <div class="col-6"><input type="text" id="aiModelName" class="form-control form-control-sm" placeholder="Model"></div>
-                    <div class="col-12"><input type="password" id="aiApiKey" class="form-control form-control-sm" placeholder="API Key"><button class="btn btn-primary btn-sm mt-1 w-100" onclick="saveAiConfig()">Guardar</button></div>
-                </div>
+            <div class="modal-body bg-light p-3" id="chatArea" style="overflow-y: auto;">
+                <div class="d-flex mb-3"><div class="bg-white border rounded p-3 shadow-sm">Hola, ¿en qué te ayudo?</div></div>
             </div>
-            <div class="modal-body bg-light p-0 d-flex flex-column"><div id="chatArea" class="flex-grow-1 overflow-auto p-3"><div class="d-flex mb-3"><div class="bg-white border rounded p-3 shadow-sm" style="max-width:85%;">Hola, soy tu copiloto de ingeniería.</div></div></div></div>
-            <div class="modal-footer p-2 bg-white"><div class="input-group"><input type="text" id="userPrompt" class="form-control border-0 bg-light" placeholder="Pregunta algo..." onkeypress="handleEnter(event)"><button class="btn btn-primary" onclick="sendPrompt()"><i class="fa-solid fa-paper-plane"></i></button></div></div>
+            <div class="modal-footer p-2 bg-white"><div class="input-group"><input type="text" id="userPrompt" class="form-control border-0 bg-light" placeholder="Pregunta..." onkeypress="handleEnter(event)"><button class="btn btn-primary" onclick="sendPrompt()"><i class="fa-solid fa-paper-plane"></i></button></div></div>
         </div>
     </div>
 </div>
@@ -372,10 +367,12 @@
 {% block scripts %}
 <script>
     function toggleSidebar() { document.getElementById('sidebar').classList.toggle('show'); document.getElementById('mobileBackdrop').classList.toggle('show'); }
+    
     function selectQuery(id, title) {
         document.getElementById('hiddenQueryId').value = id;
         document.getElementById('headerTitleText').innerText = title;
-        document.getElementById('searchForm').submit();
+        document.getElementById('queryNameLabel').innerText = title;
+        if(tomSelectInstance) { tomSelectInstance.clear(); tomSelectInstance.focus(); }
         if(window.innerWidth < 992) toggleSidebar();
     }
 
@@ -383,7 +380,7 @@
     document.addEventListener("DOMContentLoaded", function(){
         tomSelectInstance = new TomSelect("#select-param", {
             valueField: 'id', labelField: 'title', searchField: ['title', 'id'],
-            preload: 'focus', placeholder: 'Buscar nodo o material...',
+            preload: 'focus', placeholder: 'Escribe ID o Nombre...',
             create: false, maxItems: 1, plugins: ['dropdown_input'],
             onItemAdd: function() { this.setTextboxValue(''); },
             load: function(query, callback) {
@@ -398,9 +395,6 @@
         {% if current_param %}
             setTimeout(() => { tomSelectInstance.addOption({id: "{{current_param}}", title: "{{current_param_label}}"}); tomSelectInstance.setValue("{{current_param}}"); }, 100);
         {% endif %}
-        const savedConfig = localStorage.getItem("ai_config");
-        if(savedConfig) { try { aiConfig = JSON.parse(savedConfig); } catch(e){} }
-        loadTools();
     });
 
     function updateSearchParam(id, label) {
@@ -419,21 +413,18 @@
             const nodes = new Map(), edges = [];
             rows.forEach(r => {
                 const keys = Object.keys(r);
-                const aIdKey = keys.find(k => k.includes('A_ID') || k === 'ID' || k === 'CODIGO');
-                const bIdKey = keys.find(k => k.includes('B_ID'));
-                const aLabelKey = keys.find(k => k.includes('A_LABEL') || k === 'NAME' || k === 'DESCRIPCION' || k === 'EQUIPO');
-                const bLabelKey = keys.find(k => k.includes('B_LABEL'));
-                
-                const aId = r[aIdKey]; const aLabel = r[aLabelKey] || aId;
-                const bId = r[bIdKey]; const bLabel = r[bLabelKey] || bId;
+                const aId = r[keys.find(k => k.includes('A_ID') || k==='ID')] || r.ID;
+                const bId = r[keys.find(k => k.includes('B_ID'))];
+                const aLabel = r[keys.find(k => k.includes('A_LABEL') || k==='NAME')] || aId;
                 
                 if(aId && !nodes.has(aId)) nodes.set(aId, {id:aId, label:aLabel, group:r.A_TYPE||'Default'});
-                if(bId && !nodes.has(bId)) nodes.set(bId, {id:bId, label:bLabel, group:r.B_TYPE||'Default'});
-                if(aId && bId) edges.push({from:aId, to:bId, label:r.RELACION||'', arrows:'to'});
+                if(bId && !nodes.has(bId)) nodes.set(bId, {id:bId, label:bId, group:r.B_TYPE||'Default'});
+                if(aId && bId) edges.push({from:aId, to:bId, arrows:'to'});
             });
             network = new vis.Network(document.getElementById('network-container'), {
                 nodes: new vis.DataSet(Array.from(nodes.values())), edges: new vis.DataSet(edges)
             }, { nodes: { shape: 'dot', font: { face: 'Segoe UI' } }, physics: { stabilization: false } });
+            
             network.on("click", p => {
                 if(p.nodes.length) {
                     const n = nodes.get(p.nodes[0]);
@@ -477,42 +468,35 @@
 
     function setFocusFromCanvas() { if (selectedNodeData) updateSearchParam(selectedNodeData.id, selectedNodeData.label); }
 
-    // --- IA (MISMA LOGICA) ---
+    // IA Logic
     const PROVIDERS = { openai: { url: "https://api.openai.com/v1/chat/completions", model: "gpt-4o" }, groq: { url: "https://api.groq.com/openai/v1/chat/completions", model: "llama3-70b-8192" }, ollama: { url: "http://localhost:11434/v1/chat/completions", model: "llama3" } };
     let aiConfig = { provider: 'openai', baseUrl: PROVIDERS.openai.url, model: PROVIDERS.openai.model, key: '' };
     let chatHistory = [{role: "system", content: "Eres un experto industrial."}];
     let availableTools = null;
-    function updateProviderSettings() { const p = document.getElementById('aiProviderSelect').value; if(PROVIDERS[p]) { document.getElementById('aiBaseUrl').value = PROVIDERS[p].url; document.getElementById('aiModelName').value = PROVIDERS[p].model; } }
-    function triggerAiTool(name, id) { new bootstrap.Modal(document.getElementById('aiModal')).show(); let ctx = ""; if(tomSelectInstance && tomSelectInstance.getValue()) ctx = ` sobre "${tomSelectInstance.getValue()}"`; document.getElementById('userPrompt').value = `Usa "${name}"${ctx} y explica.`; }
-    function saveAiConfig() { aiConfig = { provider: document.getElementById('aiProviderSelect').value, baseUrl: document.getElementById('aiBaseUrl').value, model: document.getElementById('aiModelName').value, key: document.getElementById('aiApiKey').value }; localStorage.setItem("ai_config", JSON.stringify(aiConfig)); bootstrap.Collapse.getInstance(document.getElementById('configPanel'))?.hide(); }
-    function loadTools() { if(!availableTools) fetch('/api/ai/tools').then(r=>r.json()).then(d=>availableTools=d); }
+    function saveAiConfig() { aiConfig = { provider: document.getElementById('aiProviderSelect').value, baseUrl: document.getElementById('aiBaseUrl').value, model: document.getElementById('aiModelName').value, key: document.getElementById('aiApiKey').value }; localStorage.setItem("ai_config", JSON.stringify(aiConfig)); }
+    function loadTools() { fetch('/api/ai/tools').then(r=>r.json()).then(d=>availableTools=d); }
     function handleEnter(e) { if(e.key==='Enter') sendPrompt(); }
     async function sendPrompt() {
         const inp = document.getElementById('userPrompt'); if(!inp.value.trim()) return;
-        appendMessage('user', inp.value); chatHistory.push({role:'user', content:inp.value}); inp.value=''; const tid = showTyping();
+        const div = document.createElement('div'); div.className = "d-flex justify-content-end mb-2"; div.innerHTML = `<div class="bg-primary text-white p-2 rounded">${inp.value}</div>`; document.getElementById('chatArea').append(div);
+        chatHistory.push({role:'user', content:inp.value}); inp.value=''; 
         try {
             const res = await fetch("/api/openai_proxy", { method:"POST", headers:{"Content-Type":"application/json","Authorization":`Bearer ${aiConfig.key}`,"x-base-url":aiConfig.baseUrl}, body:JSON.stringify({model:aiConfig.model, messages:chatHistory, tools:availableTools})});
-            const data = await res.json(); if(data.error) throw new Error(JSON.stringify(data.error));
-            const msg = data.choices[0].message; chatHistory.push(msg); removeTyping(tid);
-            if(msg.tool_calls) {
-                appendMessage('assistant', '<i>🔎 Ejecutando...</i>', true);
-                for(const tc of msg.tool_calls) {
-                    let args = {}; try { args=JSON.parse(tc.function.arguments); } catch(e){}
-                    const tRes = await fetch('/api/execute', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({query_id:tc.function.name, param:args.param})});
-                    const tData = await tRes.json(); chatHistory.push({role:'tool', tool_call_id:tc.id, name:tc.function.name, content:JSON.stringify(tData).slice(0, 2000)});
-                }
-                showTyping();
+            const data = await res.json();
+            if(data.choices && data.choices[0].message.tool_calls) {
+                const tc = data.choices[0].message.tool_calls[0];
+                let args = JSON.parse(tc.function.arguments);
+                const tRes = await fetch('/api/execute', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({query_id:tc.function.name, param:args.param})});
+                const tData = await tRes.json();
+                chatHistory.push(data.choices[0].message);
+                chatHistory.push({role:'tool', tool_call_id:tc.id, name:tc.function.name, content:JSON.stringify(tData).slice(0, 500)});
                 const res2 = await fetch("/api/openai_proxy", { method:"POST", headers:{"Content-Type":"application/json","Authorization":`Bearer ${aiConfig.key}`,"x-base-url":aiConfig.baseUrl}, body:JSON.stringify({model:aiConfig.model, messages:chatHistory})});
-                const data2 = await res2.json(); removeTyping(); appendMessage('assistant', data2.choices[0].message.content); chatHistory.push(data2.choices[0].message);
-            } else { appendMessage('assistant', msg.content); }
-        } catch(e) { removeTyping(); appendMessage('system', "Error: "+e.message); }
+                const data2 = await res2.json();
+                const div2 = document.createElement('div'); div2.className = "d-flex mb-2"; div2.innerHTML = `<div class="bg-white border p-2 rounded">${data2.choices[0].message.content}</div>`; document.getElementById('chatArea').append(div2);
+            } else {
+                const div2 = document.createElement('div'); div2.className = "d-flex mb-2"; div2.innerHTML = `<div class="bg-white border p-2 rounded">${data.choices[0].message.content}</div>`; document.getElementById('chatArea').append(div2);
+            }
+        } catch(e) { console.error(e); }
     }
-    function appendMessage(role, text, temp) {
-        const div = document.createElement('div'); div.className = `d-flex align-items-start mb-3 ${role==='user'?'justify-content-end':''}`;
-        div.innerHTML = `<div class="${role==='user'?'bg-primary text-white':'bg-white border'} rounded p-3 shadow-sm" style="max-width:85%;">${text}</div>`;
-        document.getElementById('chatArea').append(div);
-    }
-    function showTyping() { const id='t-'+Date.now(); appendMessage('system', '<div id="'+id+'">...</div>'); return id; }
-    function removeTyping(id) { if(id) document.getElementById(id)?.parentElement?.parentElement?.remove(); }
 </script>
 {% endblock %}
