@@ -1,3 +1,27 @@
+Esta es la versión definitiva y mejorada de templates/dashboard.html.
+
+Mejoras implementadas:
+
+Columnas Dinámicas: Ya no están "hardcoded". El sistema lee results.columns y genera la cabecera y las celdas automáticamente.
+
+Detección de Tipos de Datos:
+
+Si la columna se llama PRECIO, COSTO, STOCK, CANTIDAD, TOTAL, se alinea a la derecha y usa fuente monoespaciada.
+
+Si la columna se llama TIPO, TYPE, STATUS, CATEGORIA, se renderiza como una etiqueta (badge).
+
+La primera columna siempre se renderiza con el estilo de "Árbol" (Icono + Texto en negrita).
+
+Acciones Contextuales Inteligentes: El botón de "tres puntos" busca automáticamente un valor que parezca un ID en la fila para permitir el filtrado, sin importar cómo se llame la columna.
+
+Reemplaza todo el contenido de templates/dashboard.html:
+
+code
+Html
+play_circle
+download
+content_copy
+expand_less
 {% extends "base.html" %}
 
 {% block content %}
@@ -96,23 +120,28 @@
         flex-grow: 1; overflow-y: auto; padding: 20px; background-color: var(--bg-body);
     }
 
-    /* --- TABLA TAM 4 --- */
+    /* --- TABLA TAM 4 (DINÁMICA) --- */
     .tree-table {
         background: #fff; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        width: 100%; border-collapse: collapse;
+        width: 100%; border-collapse: collapse; white-space: nowrap;
     }
     .tree-table th {
         background-color: #fff; border-bottom: 1px solid #eee;
         padding: 12px 15px; text-align: left; font-weight: 700;
-        font-size: 0.85rem; color: #333;
+        font-size: 0.85rem; color: #333; text-transform: uppercase;
     }
     .tree-table td {
         padding: 10px 15px; border-bottom: 1px solid #f0f0f0;
         font-size: 0.9rem; color: #555; vertical-align: middle;
     }
     .tree-table tr:hover { background-color: #f8f9fa; }
+    
     .node-icon { color: var(--folder-icon-color); margin-right: 8px; }
-    .numeric-col { text-align: right; font-family: 'Roboto Mono', monospace; }
+    
+    /* Clases utilitarias para columnas dinámicas */
+    .col-numeric { text-align: right; font-family: 'Roboto Mono', monospace; color: #2c3e50; }
+    .col-badge span { font-size: 0.75rem; padding: 3px 8px; border-radius: 12px; }
+    .col-main { font-weight: 600; color: #2c3e50; }
 
     /* --- EXTRAS --- */
     #network-container { width: 100%; height: 600px; background: #fff; border: 1px solid #ddd; }
@@ -126,6 +155,7 @@
             background: rgba(0,0,0,0.5); z-index: 1040;
         }
         .overlay-backdrop.show { display: block; }
+        .tree-table { display: block; overflow-x: auto; }
     }
 </style>
 
@@ -136,7 +166,7 @@
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-brand">
             <div class="d-flex justify-content-between align-items-center">
-                <div><div class="brand-title">TAM 4</div><div class="brand-subtitle text-white-50">v2024.34.6</div></div>
+                <div><div class="brand-title">NEXUS INDUSTRIAL</div><div class="brand-subtitle text-white-50">v2024.34.6</div></div>
                 <button class="btn btn-sm text-white d-lg-none" onclick="toggleSidebar()"><i class="fa-solid fa-times"></i></button>
             </div>
             <div class="mt-2 text-white-50 small" style="font-size: 0.7rem;">Nexus Industrial Graph Analytics</div>
@@ -174,7 +204,14 @@
                 <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-2" style="width:30px; height:30px;">
                     <i class="fa-solid fa-user text-white" style="font-size: 0.8rem;"></i>
                 </div>
-                <div><div class="fw-bold">Angel A. Urbina</div><div style="font-size: 0.7rem; opacity: 0.6;">Autor / Developer</div></div>
+                
+<div>
+  <a href="https://angelurbinacv.netlify.app" style="text-decoration: none; color: inherit;">
+    <div class="fw-bold">Angel A. Urbina</div>
+    <div style="font-size: 0.7rem; opacity: 0.6;">Autor / Developer</div>
+  </a>
+</div>
+
             </div>
         </div>
     </aside>
@@ -216,7 +253,7 @@
         <div class="workspace">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <div class="d-flex gap-2">
-                    <span class="badge bg-white text-dark border p-2">categorías: <strong>UNSPSC</strong></span>
+                    <span class="badge bg-white text-dark border p-2">categorías: <strong>Dinámica</strong></span>
                     <button class="btn btn-link btn-sm text-secondary text-decoration-none">Establecer como filtro</button>
                 </div>
                 <div class="btn-group">
@@ -228,65 +265,87 @@
 
             {% if results %}
                 {% if results.is_graph %}
+                    <!-- VISTA GRAFO -->
                     <div class="bg-white p-2 rounded shadow-sm border">
                         <div id="network-container"></div>
                         <div class="text-center small text-muted mt-2"><i class="fa-solid fa-circle-info"></i> Usa el scroll para zoom y arrastra los nodos.</div>
                     </div>
                 {% else %}
-                    <div class="table-responsive bg-white rounded shadow-sm border">
+                    <!-- VISTA TABLA DINÁMICA MEJORADA -->
+                    <div class="table-responsive bg-white rounded shadow-sm border" style="min-height: 400px;">
                         <table class="tree-table">
                             <thead>
                                 <tr>
-                                    <th style="width: 40%;">Nodo / Descripción</th>
-                                    <th>Categoría</th>
-                                    <th class="numeric-col">Stock (€) <i class="fa-solid fa-sort"></i></th>
-                                    <th class="numeric-col">Cantidad <i class="fa-solid fa-sort"></i></th>
-                                    <th>Ref.</th>
-                                    <th style="width: 50px;"></th>
+                                    <!-- Cabecera Dinámica: Renderiza lo que venga del backend -->
+                                    {% for col in results.columns %}
+                                        <th class="{% if col is containing('PRECIO') or col is containing('COSTO') or col is containing('STOCK') or col is containing('CANT') or col is containing('TOTAL') %}text-end{% endif %}">
+                                            {{ col | replace(from="_", to=" ") }}
+                                            {% if col is containing('PRECIO') or col is containing('COSTO') %}<i class="fa-solid fa-euro-sign ms-1 text-muted" style="font-size:0.7em;"></i>{% endif %}
+                                        </th>
+                                    {% endfor %}
+                                    <th style="width: 50px;"></th> <!-- Columna Acciones -->
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for row in results.rows %}
                                 
-                                {# --- SOLUCIÓN DEL ERROR: VARIABLES SEGURAS --- #}
-                                {% set b_type = row.B_TYPE | default(value=row.TIPO | default(value="General")) %}
-                                {% set a_label = row.A_LABEL | default(value=row.DESCRIPCION | default(value=row.NAME | default(value=row.EQUIPO | default(value="Item")))) %}
-                                {% set a_id = row.A_ID | default(value=row.CODIGO | default(value=row.ID | default(value="-"))) %}
-                                {% set precio = row.PRECIO | default(value=row.COSTO | default(value="-")) %}
-                                {% set cantidad = row.CANTIDAD | default(value=row.STOCK | default(value="1")) %}
+                                {# Identificación inteligente de ID y Etiqueta para las acciones #}
+                                {% set row_id = row.ID | default(value=row.A_ID | default(value=row.CODIGO | default(value=row.MATERIAL | default(value="")))) %}
+                                {% set row_label = row.NAME | default(value=row.A_LABEL | default(value=row.DESCRIPCION | default(value=row.EQUIPO | default(value="")))) %}
 
                                 <tr>
-                                    <td>
-                                        <!-- Icono dinámico seguro -->
-                                        {% if "Equipo" in b_type or "Ubicacion" in b_type %}
-                                            <i class="fa-regular fa-folder node-icon"></i>
-                                        {% else %}
-                                            <i class="fa-solid fa-cube text-secondary me-2" style="font-size: 0.8rem;"></i>
-                                        {% endif %}
+                                    {% for col in results.columns %}
+                                        {% set val = row[col] %}
                                         
-                                        <span class="fw-bold text-dark">{{ a_label }}</span>
-                                        <div class="small text-muted ms-4">ID: {{ a_id }}</div>
-                                    </td>
-                                    <td><span class="badge bg-light text-secondary border">{{ b_type }}</span></td>
-                                    <td class="numeric-col">{{ precio }}</td>
-                                    <td class="numeric-col">{{ cantidad }}</td>
-                                    <td class="text-center"><small class="text-muted">{{ loop.index }}</small></td>
-                                    <td>
+                                        <!-- Lógica de renderizado por tipo de columna -->
+                                        {% if loop.first %}
+                                            <!-- PRIMERA COLUMNA: Estilo Árbol Principal -->
+                                            <td class="col-main">
+                                                {% if "Equipo" in row.B_TYPE or "Ubicacion" in row.B_TYPE or "Equipo" in row.A_TYPE %}
+                                                    <i class="fa-regular fa-folder node-icon"></i>
+                                                {% else %}
+                                                    <i class="fa-solid fa-cube text-secondary me-2 small"></i>
+                                                {% endif %}
+                                                {{ val }}
+                                            </td>
+
+                                        {% elif col is containing("TYPE") or col is containing("TIPO") or col is containing("STATUS") or col is containing("ESTADO") %}
+                                            <!-- COLUMNAS TIPO/ESTADO: Badge -->
+                                            <td class="col-badge">
+                                                <span class="badge bg-light text-secondary border">{{ val }}</span>
+                                            </td>
+
+                                        {% elif col is containing("PRECIO") or col is containing("COSTO") or col is containing("STOCK") or col is containing("CANT") or col is containing("TOTAL") %}
+                                            <!-- COLUMNAS NUMÉRICAS: Alineación derecha + Monoespaciado -->
+                                            <td class="col-numeric">
+                                                {{ val }}
+                                            </td>
+
+                                        {% else %}
+                                            <!-- RESTO: Normal -->
+                                            <td>{{ val }}</td>
+                                        {% endif %}
+                                    {% endfor %}
+
+                                    <!-- Columna de Acciones -->
+                                    <td class="text-center">
                                         <div class="dropdown">
                                             <button class="btn btn-link btn-sm text-secondary p-0" data-bs-toggle="dropdown"><i class="fa-solid fa-ellipsis-vertical"></i></button>
                                             <ul class="dropdown-menu dropdown-menu-end shadow border-0">
-                                                <li><a class="dropdown-item small" href="#" onclick="updateSearchParam('{{ a_id }}', '{{ a_label }}')"><i class="fa-solid fa-filter me-2"></i> Filtrar por este nodo</a></li>
+                                                <li><a class="dropdown-item small" href="#"><i class="fa-solid fa-eye me-2"></i> Ver detalle</a></li>
+                                                {% if row_id %}
+                                                <li><a class="dropdown-item small" href="#" onclick="updateSearchParam('{{ row_id }}', '{{ row_label }}')"><i class="fa-solid fa-filter me-2"></i> Filtrar por: <b>{{ row_label }}</b></a></li>
+                                                {% endif %}
                                             </ul>
                                         </div>
                                     </td>
                                 </tr>
                                 {% endfor %}
+                                
+                                <!-- Fila de Totales (Visual) -->
                                 <tr style="background-color: #fcfcfc; font-weight: bold; border-top: 2px solid #e9ecef;">
-                                    <td class="ps-3">Total</td>
-                                    <td></td>
-                                    <td class="numeric-col text-dark">--</td>
-                                    <td class="numeric-col text-dark">{{ results.rows | length }} items</td>
-                                    <td></td><td></td>
+                                    <td class="ps-3 text-muted">Resultados: {{ results.rows | length }}</td>
+                                    <td colspan="{{ results.columns | length }}"></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -390,9 +449,15 @@
         if (isGraphQuery && document.getElementById('network-container')) {
             const nodes = new Map(), edges = [];
             rows.forEach(r => {
-                // Usamos verificaciones seguras de existencia de propiedades
-                const aId = r.A_ID || r.ID; const aLabel = r.A_LABEL || r.NAME || r.DESCRIPCION || aId;
-                const bId = r.B_ID; const bLabel = r.B_LABEL || bId;
+                // Buscamos propiedades dinámicamente
+                const keys = Object.keys(r);
+                const aIdKey = keys.find(k => k.includes('A_ID') || k === 'ID' || k === 'CODIGO');
+                const bIdKey = keys.find(k => k.includes('B_ID'));
+                const aLabelKey = keys.find(k => k.includes('A_LABEL') || k === 'NAME' || k === 'DESCRIPCION' || k === 'EQUIPO');
+                const bLabelKey = keys.find(k => k.includes('B_LABEL'));
+                
+                const aId = r[aIdKey]; const aLabel = r[aLabelKey] || aId;
+                const bId = r[bIdKey]; const bLabel = r[bLabelKey] || bId;
                 
                 if(aId && !nodes.has(aId)) nodes.set(aId, {id:aId, label:aLabel, group:r.A_TYPE||'Default'});
                 if(bId && !nodes.has(bId)) nodes.set(bId, {id:bId, label:bLabel, group:r.B_TYPE||'Default'});
