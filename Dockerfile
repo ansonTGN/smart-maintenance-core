@@ -1,54 +1,66 @@
 # =========================================================
-# ETAPA 1: BUILDER - Compila la aplicación
+# ETAPA 1: BUILDER
 # =========================================================
-# Usamos una versión específica y reciente de Rust para evitar problemas
-# con el formato de Cargo.lock (Versión 4 o superior). 
-# AJUSTA esta versión (1.77) si tu versión local de Cargo es mucho más nueva.
-FROM rust:1.77 AS builder
+FROM rust:1.77-bookworm AS builder
 
-# Establece el directorio de trabajo
 WORKDIR /app
 
-# Copia los archivos de manifiesto para que Docker pueda cachear las dependencias
-# (Esta es la capa más pesada y la que queremos cachear si solo cambia el código fuente)
+# 1. Copiamos los manifiestos del ROOT y de TODOS los miembros del workspace
 COPY Cargo.toml Cargo.lock ./
+COPY nexus-core/Cargo.toml nexus-core/
+COPY nexus-infra/Cargo.toml nexus-infra/
+COPY nexus-app/Cargo.toml nexus-app/
 
-# Creamos un binario dummy y lo compilamos. El propósito es forzar
-# a Cargo a descargar y compilar todas las dependencias y guardarlas en caché.
-# Las dependencias solo se recompilan si Cargo.toml o Cargo.lock cambian.
-RUN mkdir -p src && echo "fn main() {}" > src/main.rs && \
-    cargo build --release
+# 2. Creamos código dummy para CADA miembro para poder compilar las dependencias.
+#    Cargo necesita encontrar un lib.rs o main.rs válido para cada miembro.
+RUN mkdir -p nexus-core/src && touch nexus-core/src/lib.rs && \
+    mkdir -p nexus-infra/src && touch nexus-infra/src/lib.rs && \
+    mkdir -p nexus-app/src && echo "fn main() {}" > nexus-app/src/main.rs
 
-# Limpiamos el binario dummy
-RUN rm -rf src
+# 3. Compilamos las dependencias (esto crea la capa cacheada pesada)
+RUN cargo build --release
 
-# Copiamos todo el código fuente real
+# 4. Borramos el código dummy para copiar el real
+RUN rm -rf nexus-core/src nexus-infra/src nexus-app/src
+
+# 5. Copiamos el código fuente real
 COPY . .
 
-# Compilamos la aplicación final. Usamos --bin para compilar solo el ejecutable 'nexus-app'.
-# Esto se hace para que Docker invalide la caché de esta capa si el código fuente cambia.
+# 6. Forzamos a Cargo a notar el cambio en el archivo principal (a veces el timestamp de COPY engaña)
+RUN touch nexus-app/src/main.rs
+
+# 7. Compilamos el binario final
 RUN cargo build --release --bin nexus-app
 
 
 # =========================================================
-# ETAPA 2: RUNNER - Imagen de Producción Mínima
+# ETAPA 2: RUNNER
 # =========================================================
-# Usamos una imagen base muy pequeña (debian-slim) que solo contiene lo necesario
-# para ejecutar el binario estáticamente enlazado.
-FROM debian:stable-slim AS runner
+FROM debian:bookworm-slim AS runner
 
-# Variables de entorno esenciales
-# Render inyectará el puerto, pero es útil para pruebas y claridad.
+WORKDIR /app
+
+# Instalar certificados CA para las peticiones HTTPS (Wikipedia, APIs externas, Neo4j Cloud)
+# y OpenSSL si alguna librería no usa rustls puro.
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends ca-certificates libssl-dev && \
+    rm -rf /var/lib/apt/lists/*
+
+# Variables de entorno
 ENV RUST_LOG="info" \
     PORT="8080" \
     TZ="Etc/UTC"
 
-# Copia el binario compilado de la etapa 'builder' al directorio de PATH
-# El binario 'nexus-app' está en /app/target/release/nexus-app en la etapa builder.
+# 1. Copiar el binario desde el builder
 COPY --from=builder /app/target/release/nexus-app /usr/local/bin/
 
-# Expone el puerto por defecto
+# 2. IMPORTANTE: Copiar los archivos estáticos requeridos en tiempo de ejecución
+#    Tu código lee "queries.json" y "templates/**/*"
+COPY queries.json ./
+COPY templates ./templates
+
+# Expone el puerto
 EXPOSE 8080
 
-# Comando para ejecutar el binario al iniciar el contenedor
-CMD ["/usr/local/bin/nexus-app"]
+# Ejecutar
+CMD ["nexus-app"]
