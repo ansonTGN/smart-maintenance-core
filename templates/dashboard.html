@@ -2,7 +2,9 @@
 
 {% block content %}
 <style>
-    /* --- TEMA VISUAL: NEXUS 1 STYLE --- */
+    /* =========================================
+       TEMA VISUAL: NEXUS 1 (Dark Sidebar)
+       ========================================= */
     :root {
         --sidebar-bg: #2c3e50;
         --sidebar-width: 280px;
@@ -18,19 +20,18 @@
     body {
         background-color: var(--bg-body);
         font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
-        overflow: hidden; /* Importante para el layout tipo App */
+        overflow: hidden; /* App-like feel */
     }
 
-    /* --- LAYOUT PRINCIPAL FLEXBOX --- */
+    /* --- LAYOUT PRINCIPAL --- */
     .app-container { 
         display: flex; 
-        height: 100vh; /* Ocupa el 100% del viewport real */
-        height: 100dvh; /* Dynamic viewport height para móviles modernos */
+        height: 100vh; height: 100dvh; 
         width: 100vw; 
         overflow: hidden;
     }
 
-    /* --- SIDEBAR (PC) --- */
+    /* --- SIDEBAR --- */
     .sidebar {
         width: var(--sidebar-width);
         background-color: var(--sidebar-bg);
@@ -39,6 +40,7 @@
         transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         z-index: 1050; flex-shrink: 0;
         height: 100%;
+        box-shadow: 2px 0 5px rgba(0,0,0,0.1);
     }
 
     .sidebar-brand {
@@ -52,10 +54,9 @@
 
     .sidebar-menu { 
         flex-grow: 1; 
-        overflow-y: auto; /* Scroll independiente para el menú */
+        overflow-y: auto; 
         padding-top: 10px;
-        scrollbar-width: thin; /* Firefox */
-        scrollbar-color: rgba(255,255,255,0.2) transparent;
+        scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.2) transparent;
     }
 
     .nav-header {
@@ -80,20 +81,22 @@
     }
     
     .author-link { color: #fff; text-decoration: none; transition: color 0.2s; display: block; }
-    .author-link:hover { color: var(--primary-accent); }
+    .author-link:hover { color: var(--primary-accent); text-decoration: underline; }
 
     /* --- CONTENIDO PRINCIPAL --- */
     .main-content {
         flex-grow: 1; display: flex; flex-direction: column;
         overflow: hidden; position: relative; background-color: #fff;
-        width: 100%; /* Asegura que ocupe el resto */
+        width: 100%;
     }
 
+    /* HEADER SUPERIOR */
     .top-header {
         height: var(--header-height); padding: 0 20px;
         display: flex; align-items: center; justify-content: space-between;
         border-bottom: 1px solid var(--border-color); background-color: #fff;
         flex-shrink: 0;
+        z-index: 1030;
     }
     .header-title {
         font-size: 1.25rem; color: #34495e; font-weight: 600;
@@ -101,15 +104,15 @@
         overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
 
-    /* --- BARRA DE FILTROS --- */
+    /* BARRA DE FILTROS Y BUSCADOR */
     .filters-bar {
         padding: 15px 20px; background-color: #f8f9fa;
         border-bottom: 1px solid var(--border-color);
-        flex-shrink: 0;
+        /* Importante: overflow visible para que el dropdown salga */
+        flex-shrink: 0; position: relative; z-index: 1020; overflow: visible;
     }
     
     .filter-tabs { display: flex; gap: 25px; overflow-x: auto; white-space: nowrap; scrollbar-width: none; }
-    .filter-tabs::-webkit-scrollbar { display: none; }
     
     .filter-tab {
         padding-bottom: 8px; font-size: 0.85rem; color: #7f8c8d;
@@ -126,32 +129,32 @@
     /* --- ESPACIO DE TRABAJO --- */
     .workspace {
         flex-grow: 1; overflow-y: auto; padding: 20px; background-color: var(--bg-body);
-        -webkit-overflow-scrolling: touch; /* Scroll suave en iOS */
+        -webkit-overflow-scrolling: touch; 
+        position: relative; z-index: 1; /* Base */
+        display: flex; flex-direction: column;
     }
 
     /* --- TABLA DINÁMICA --- */
     .table-container {
         background: #fff; border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        border: 1px solid #e9ecef;
-        overflow-x: auto; /* Scroll horizontal si la tabla es muy ancha */
+        border: 1px solid #e9ecef; overflow-x: auto;
     }
     
-    .tree-table {
-        width: 100%; border-collapse: collapse; white-space: nowrap;
-    }
+    .tree-table { width: 100%; border-collapse: collapse; white-space: nowrap; }
+    
     .tree-table th {
         background-color: #fff; border-bottom: 2px solid #f1f1f1;
         padding: 14px 16px; text-align: left; font-weight: 700;
         font-size: 0.8rem; color: #2c3e50; text-transform: uppercase;
-        position: sticky; top: 0; z-index: 10; /* Cabecera fija al hacer scroll */
+        position: sticky; top: 0; 
+        z-index: 10; /* Menor que filters-bar */
     }
+    
     .tree-table td {
         padding: 12px 16px; border-bottom: 1px solid #f5f6fa;
         font-size: 0.9rem; color: #505c6e; vertical-align: middle;
     }
-    .tree-table tr:last-child td { border-bottom: none; }
     .tree-table tr:hover { background-color: #fcfcfc; }
-    
     .node-icon { color: var(--folder-icon-color); margin-right: 10px; font-size: 1.1rem; }
     
     /* Tipografía Columnas */
@@ -163,7 +166,7 @@
     .ai-fab {
         position: fixed; bottom: 25px; right: 25px; 
         width: 60px; height: 60px; 
-        z-index: 3000;
+        z-index: 3000; /* Siempre encima */
         border: none;
         background: linear-gradient(135deg, #3498db, #8e44ad);
         color: white;
@@ -171,22 +174,23 @@
         transition: transform 0.2s, box-shadow 0.2s;
     }
     .ai-fab:active { transform: scale(0.95); }
+    .ai-fab:hover { transform: scale(1.05); }
 
     /* --- GRAFO --- */
     #network-container { width: 100%; height: 600px; background: #fff; border: 1px solid #ddd; border-radius: 4px; }
 
     /* --- TOMSELECT & OVERLAYS --- */
+    /* Z-Index crítico: debe ser mayor que la tabla y el sidebar */
+    .ts-dropdown { z-index: 2050 !important; }
     .ts-control { border-radius: 4px; border-color: #ced4da; padding-top: 8px; padding-bottom: 8px; }
-    .ts-dropdown, .ts-control { z-index: 2000 !important; }
+    
     .overlay-backdrop {
         display: none; position: fixed; top:0; left:0; width:100%; height:100%;
         background: rgba(0,0,0,0.5); z-index: 1040;
-        backdrop-filter: blur(2px);
-        transition: opacity 0.3s;
+        backdrop-filter: blur(2px); transition: opacity 0.3s;
     }
     .overlay-backdrop.show { display: block; }
 
-    /* Ocultar secciones dinámicas */
     .view-section.hidden { display: none !important; }
 
     /* =========================================
@@ -209,12 +213,12 @@
         .filters-bar { padding: 10px 15px; }
         .filter-tabs { margin-bottom: 15px; }
         
-        /* Ajuste de formulario en móvil */
+        /* Formulario en columna para móvil */
         #searchForm { flex-direction: row; }
         
         .workspace { padding: 15px; }
 
-        /* Grafo más pequeño en móvil para ver contenido */
+        /* Grafo más pequeño en móvil */
         #network-container { height: 50vh; }
 
         /* Ajustes de tabla */
@@ -240,7 +244,6 @@
             <div class="mt-2 text-white-50 small" style="font-size: 0.7rem; font-weight: 500;">Industrial Graph Analytics</div>
         </div>
 
-        <!-- Buscador menú -->
         <div class="p-3">
             <div class="input-group input-group-sm">
                 <span class="input-group-text bg-secondary border-0 text-white"><i class="fa-solid fa-magnifying-glass"></i></span>
@@ -286,9 +289,10 @@
         </div>
     </aside>
 
-    <!-- 2. CONTENIDO -->
-    <main class="main-content">
-        <!-- TOP HEADER -->
+    <!-- CONTENT WRAPPER para permitir reordenar hijos (Buscador Arriba/Abajo) -->
+    <main class="main-content" id="mainContentWrapper">
+        
+        <!-- HEADER (SIEMPRE ARRIBA) -->
         <header class="top-header">
             <div class="header-title">
                 <button class="btn btn-link text-dark d-lg-none me-3 p-0" onclick="toggleSidebar()"><i class="fa-solid fa-bars fa-lg"></i></button>
@@ -296,20 +300,23 @@
                 <span id="headerTitleText">{% if results %} {{ results.query_title }} {% else %} Panel de Control {% endif %}</span>
             </div>
             <div class="d-flex align-items-center gap-3">
+                <!-- BOTÓN PARA CAMBIAR POSICIÓN DEL BUSCADOR -->
+                <button class="btn btn-light border btn-sm text-secondary" onclick="toggleSearchBarPosition()" title="Mover buscador Arriba/Abajo">
+                    <i class="fa-solid fa-arrows-v"></i>
+                </button>
+                <div class="vr h-50 mx-1"></div>
                 <div class="d-none d-sm-flex align-items-center gap-2">
                     <img src="https://flagcdn.com/w20/es.png" alt="ES" class="rounded-1 shadow-sm">
                     <span class="text-muted small">ES</span>
                 </div>
-                <div class="vr h-50 mx-1 d-none d-sm-block"></div>
                 <button class="btn btn-link text-secondary p-0"><i class="fa-regular fa-bell"></i></button>
                 <button class="btn btn-link text-secondary p-0"><i class="fa-regular fa-user"></i></button>
             </div>
         </header>
 
-        <!-- BARRA DE FILTROS & ACCIÓN -->
-        <div class="filters-bar">
+        <!-- BARRA DE FILTROS/BUSCADOR (ORDEN 1 POR DEFECTO) -->
+        <div class="filters-bar" id="filtersBarSection">
             <div class="row g-3 align-items-end">
-                <!-- Tabs -->
                 <div class="col-md-7 col-12">
                     <div class="filter-tabs">
                         <div class="filter-tab active">
@@ -322,7 +329,7 @@
                             <span class="dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="fa-solid fa-layer-group me-1"></i> VISTA <i class="fa-solid fa-caret-down ms-1 small opacity-50"></i>
                             </span>
-                            <ul class="dropdown-menu shadow border-0 mt-2">
+                            <ul class="dropdown-menu shadow border-0 mt-2" style="z-index: 2100;">
                                 <li>
                                     <button class="dropdown-item d-flex align-items-center py-2" onclick="switchView('table')">
                                         <i class="fa-solid fa-table me-3 text-secondary"></i> Tabla de Datos
@@ -368,8 +375,8 @@
             </div>
         </div>
 
-        <!-- ESPACIO DE TRABAJO -->
-        <div class="workspace">
+        <!-- ESPACIO DE TRABAJO (ORDEN 2 POR DEFECTO) -->
+        <div class="workspace" id="workspaceSection">
             
             <!-- Toolbar Contextual -->
             <div class="d-flex justify-content-between align-items-center mb-3">
@@ -390,7 +397,7 @@
             </div>
 
             {% if results %}
-                <!-- VISTA GRAFO (Por defecto si es grafo) -->
+                <!-- VISTA GRAFO -->
                 <div id="view-graph" class="view-section {% if not results.is_graph %}hidden{% endif %}">
                     {% if results.is_graph %}
                         <div class="bg-white p-1 rounded shadow-sm border">
@@ -408,14 +415,15 @@
                     {% endif %}
                 </div>
 
-                <!-- VISTA TABLA (Oculta si es grafo inicialmente) -->
+                <!-- VISTA TABLA -->
                 <div id="view-table" class="view-section {% if results.is_graph %}hidden{% endif %}">
                     <div class="table-container">
                         <table class="tree-table">
                             <thead>
                                 <tr>
                                     {% for col in results.columns %}
-                                        <th class="{% if 'PRECIO' in col or 'COSTO' in col or 'STOCK' in col or 'CANT' in col or 'TOTAL' in col %}text-end{% endif %}">
+                                        <!-- ALINEACIÓN NUMÉRICA AUTOMÁTICA -->
+                                        <th class="{% if 'PRECIO' in col or 'COSTO' in col or 'STOCK' in col or 'CANT' in col or 'TOTAL' in col or 'PROMEDIO' in col or 'AVG' in col or 'SCORE' in col or 'NUM' in col %}text-end{% endif %}">
                                             {{ col | replace(from="_", to=" ") }}
                                         </th>
                                     {% endfor %}
@@ -425,7 +433,6 @@
                             <tbody>
                                 {% for row in results.rows %}
                                 
-                                {# Extracción segura de datos para las acciones #}
                                 {% set row_id = row.ID | default(value=row.A_ID | default(value=row.CODIGO | default(value=row.MATERIAL | default(value="")))) %}
                                 {% set row_label = row.NAME | default(value=row.A_LABEL | default(value=row.DESCRIPCION | default(value=row.EQUIPO | default(value="")))) %}
 
@@ -433,7 +440,6 @@
                                     {% for col in results.columns %}
                                         {% set val = row[col] %}
                                         
-                                        <!-- Renderizado condicional de celdas -->
                                         {% if loop.first %}
                                             <td class="col-main">
                                                 {% if row.B_TYPE and ("Equipo" in row.B_TYPE or "Ubicacion" in row.B_TYPE) %}
@@ -443,15 +449,13 @@
                                                 {% endif %}
                                                 <span class="text-truncate" style="max-width: 250px; display:inline-block;">{{ val }}</span>
                                             </td>
-
                                         {% elif 'TYPE' in col or 'TIPO' in col or 'STATUS' in col or 'ESTADO' in col %}
-                                            <td class="col-badge">
-                                                <span class="badge bg-light text-secondary border">{{ val }}</span>
-                                            </td>
-
-                                        {% elif 'PRECIO' in col or 'COSTO' in col or 'STOCK' in col or 'CANT' in col or 'TOTAL' in col %}
+                                            <td class="col-badge"><span class="badge bg-light text-secondary border">{{ val }}</span></td>
+                                        
+                                        <!-- VALORES NUMÉRICOS AMPLIADOS -->
+                                        {% elif 'PRECIO' in col or 'COSTO' in col or 'STOCK' in col or 'CANT' in col or 'TOTAL' in col or 'PROMEDIO' in col or 'AVG' in col or 'SCORE' in col or 'NUM' in col %}
                                             <td class="col-numeric">{{ val }}</td>
-
+                                        
                                         {% else %}
                                             <td>{{ val }}</td>
                                         {% endif %}
@@ -460,8 +464,9 @@
                                     <td class="text-center">
                                         <div class="dropdown">
                                             <button class="btn btn-link btn-sm text-secondary p-0" data-bs-toggle="dropdown"><i class="fa-solid fa-ellipsis-vertical"></i></button>
-                                            <ul class="dropdown-menu dropdown-menu-end shadow border-0">
-                                                <li><a class="dropdown-item small" href="#"><i class="fa-solid fa-eye me-2"></i> Ver detalle</a></li>
+                                            <ul class="dropdown-menu dropdown-menu-end shadow border-0" style="z-index: 2200;">
+                                                <!-- BOTÓN DETALLE FUNCIONAL -->
+                                                <li><a class="dropdown-item small" href="#" onclick='showRowDetail({{ row | json_encode() | safe }})'><i class="fa-solid fa-eye me-2"></i> Ver detalle completo</a></li>
                                                 {% if row_id %}
                                                 <li><a class="dropdown-item small" href="#" onclick="updateSearchParam('{{ row_id }}', '{{ row_label }}')"><i class="fa-solid fa-filter me-2"></i> Filtrar por: <b>{{ row_label }}</b></a></li>
                                                 {% endif %}
@@ -471,7 +476,7 @@
                                 </tr>
                                 {% endfor %}
                                 
-                                <!-- Footer Tabla -->
+                                <!-- Footer -->
                                 <tr style="background-color: #f8f9fa; font-weight: 600; border-top: 2px solid #e9ecef;">
                                     <td class="ps-3 text-muted" colspan="100%">
                                         <i class="fa-solid fa-list-ol me-2"></i> Total Resultados: {{ results.rows | length }}
@@ -484,15 +489,9 @@
             {% else %}
                 <!-- EMPTY STATE -->
                 <div class="d-flex flex-column align-items-center justify-content-center h-75 text-muted opacity-75">
-                    <div class="bg-white p-5 rounded-circle shadow-sm mb-4 border">
-                        <i class="fa-solid fa-magnifying-glass-chart fa-4x text-light-gray" style="color: #bdc3c7;"></i>
-                    </div>
+                    <div class="bg-white p-5 rounded-circle shadow-sm mb-4 border"><i class="fa-solid fa-magnifying-glass-chart fa-4x text-light-gray" style="color: #bdc3c7;"></i></div>
                     <h4 class="fw-light text-dark">Bienvenido a Nexus 1</h4>
-                    <p class="small text-center mt-2">
-                        1. Selecciona una herramienta en el menú.<br>
-                        2. Introduce parámetros si es necesario.<br>
-                        3. Pulsa <b>EJECUTAR</b> o pregunta a la <b>IA</b>.
-                    </p>
+                    <p class="small text-center mt-2">1. Selecciona una herramienta.<br>2. Introduce parámetros.<br>3. Pulsa <b>EJECUTAR</b>.</p>
                 </div>
             {% endif %}
         </div>
@@ -500,39 +499,86 @@
 </div>
 
 <!-- BOTÓN IA FLOTANTE -->
-<button class="btn rounded-circle d-flex align-items-center justify-content-center ai-fab" 
-        data-bs-toggle="modal" data-bs-target="#aiModal" title="Asistente IA">
-    <i class="fa-solid fa-robot fa-xl"></i>
-</button>
+<button class="btn rounded-circle d-flex align-items-center justify-content-center ai-fab" data-bs-toggle="modal" data-bs-target="#aiModal" title="Asistente IA"><i class="fa-solid fa-robot fa-xl"></i></button>
 
-<!-- MODALS -->
-<div class="modal fade" id="statsModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Estadísticas</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><canvas id="mainChart" style="max-height: 400px;"></canvas></div></div></div></div>
-
+<!-- MODAL CHAT IA (Configuración Corregida) -->
 <div class="modal fade" id="aiModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
-        <div class="modal-content border-0 shadow-lg" style="height: 80vh;">
-            <div class="modal-header bg-dark text-white">
+        <div class="modal-content border-0 shadow-lg" style="height: 85vh;">
+            <div class="modal-header bg-dark text-white py-2">
                 <h5 class="modal-title fs-6"><i class="fa-solid fa-brain me-2 text-info"></i> Asistente Nexus</h5>
-                <div class="ms-auto"><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+                <div class="ms-auto d-flex gap-2">
+                    <button class="btn btn-sm btn-outline-secondary text-white" type="button" data-bs-toggle="collapse" data-bs-target="#configPanel"><i class="fa-solid fa-gear"></i></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
             </div>
-            <div class="modal-body bg-light p-3" id="chatArea" style="overflow-y: auto;">
-                <div class="d-flex mb-3"><div class="bg-white border rounded p-3 shadow-sm">Hola, soy tu copiloto de ingeniería industrial. ¿En qué puedo ayudarte hoy?</div></div>
+            
+            <!-- PANEL CONFIGURACIÓN IA -->
+            <div class="collapse bg-light border-bottom" id="configPanel">
+                <div class="p-3">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-muted mb-1">Proveedor IA</label>
+                            <select id="aiProviderSelect" class="form-select form-select-sm" onchange="updateProviderSettings()">
+                                <option value="openai">OpenAI (GPT-4)</option>
+                                <option value="groq">Groq (Llama3)</option>
+                                <option value="ollama">Ollama (Local)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-muted mb-1">Endpoint URL</label>
+                            <input type="text" id="aiBaseUrl" class="form-control form-control-sm" placeholder="https://api...">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-muted mb-1">Modelo</label>
+                            <input type="text" id="aiModelName" class="form-control form-control-sm" placeholder="gpt-4o">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-bold text-muted mb-1">API Key</label>
+                            <div class="input-group input-group-sm">
+                                <input type="password" id="aiApiKey" class="form-control" placeholder="sk-...">
+                                <button class="btn btn-primary px-4" onclick="saveAiConfig()"><i class="fa-solid fa-save me-2"></i> Guardar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="modal-footer p-2 bg-white"><div class="input-group"><input type="text" id="userPrompt" class="form-control border-0 bg-light" placeholder="Pregunta algo (ej: repuestos críticos)..." onkeypress="handleEnter(event)"><button class="btn btn-primary" onclick="sendPrompt()"><i class="fa-solid fa-paper-plane"></i></button></div></div>
+
+            <div class="modal-body bg-white p-0 d-flex flex-column" style="background-color: #f8f9fa !important;">
+                <div id="chatArea" class="flex-grow-1 overflow-auto p-3">
+                    <div class="d-flex mb-3"><div class="bg-white border rounded p-3 shadow-sm text-dark" style="max-width:85%;"><i class="fa-solid fa-robot text-primary me-2"></i> Hola, soy tu copiloto de ingeniería industrial. ¿En qué puedo ayudarte hoy?</div></div>
+                </div>
+            </div>
+            <div class="modal-footer p-2 bg-white border-top">
+                <div class="input-group">
+                    <input type="text" id="userPrompt" class="form-control border-secondary border-opacity-25 bg-light" placeholder="Pregunta algo (ej: repuestos críticos)..." onkeypress="handleEnter(event)">
+                    <button class="btn btn-primary px-3" onclick="sendPrompt()"><i class="fa-solid fa-paper-plane"></i></button>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
-<div class="offcanvas offcanvas-end shadow" tabindex="-1" id="nodeOffcanvas" data-bs-backdrop="false">
-    <div class="offcanvas-header bg-primary text-white"><h5 class="fw-bold">Detalle</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button></div>
-    <div class="offcanvas-body"><h5 id="canvasNodeLabel" class="fw-bold"></h5><code id="canvasNodeId" class="d-block mb-3 text-muted"></code><button class="btn btn-primary w-100 mb-2" onclick="setFocusFromCanvas()">Usar como filtro</button></div>
+<div class="modal fade" id="statsModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Estadísticas</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><canvas id="mainChart" style="max-height: 400px;"></canvas></div></div></div></div>
+
+<!-- OFFCANVAS DETALLE DE FILA -->
+<div class="offcanvas offcanvas-end shadow" tabindex="-1" id="nodeOffcanvas" data-bs-backdrop="false" style="z-index: 3050; width: 400px;">
+    <div class="offcanvas-header bg-primary text-white"><h5 class="fw-bold"><i class="fa-solid fa-circle-info me-2"></i> Detalle</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button></div>
+    <div class="offcanvas-body">
+        <h5 id="canvasNodeLabel" class="fw-bold mb-1"></h5>
+        <code id="canvasNodeId" class="d-block mb-3 text-muted bg-light p-1 rounded border small"></code>
+        
+        <!-- Contenedor dinámico de propiedades -->
+        <div id="detailProperties" class="mb-4"></div>
+
+        <button class="btn btn-primary w-100 mb-2" onclick="setFocusFromCanvas()"><i class="fa-solid fa-filter me-2"></i> Usar como filtro</button>
+    </div>
 </div>
 
 {% endblock %}
 
 {% block scripts %}
 <script>
-    // --- LÓGICA DE INTERFAZ ---
     function toggleSidebar() { document.getElementById('sidebar').classList.toggle('show'); document.getElementById('mobileBackdrop').classList.toggle('show'); }
     
     function selectQuery(id, title) {
@@ -543,24 +589,50 @@
         if(window.innerWidth < 992) toggleSidebar();
     }
 
-    // --- SWITCH VISTAS (TABLA / GRAFO) ---
     function switchView(viewName) {
         const graphDiv = document.getElementById('view-graph');
         const tableDiv = document.getElementById('view-table');
         const badge = document.getElementById('viewModeBadge');
-
         if (viewName === 'graph') {
-            if(graphDiv) {
-                graphDiv.classList.remove('hidden');
-                tableDiv.classList.add('hidden');
-                badge.innerText = "Vista: Grafo";
-                if(network) network.fit(); 
-            }
+            if(graphDiv) { graphDiv.classList.remove('hidden'); tableDiv.classList.add('hidden'); badge.innerText = "Vista: Grafo"; if(network) network.fit(); }
         } else {
-            if(graphDiv) graphDiv.classList.add('hidden');
-            tableDiv.classList.remove('hidden');
-            badge.innerText = "Vista: Tabla";
+            if(graphDiv) graphDiv.classList.add('hidden'); tableDiv.classList.remove('hidden'); badge.innerText = "Vista: Tabla";
         }
+    }
+
+    // --- REORDENAMIENTO BUSCADOR ---
+    function toggleSearchBarPosition() {
+        const wrapper = document.getElementById('mainContentWrapper');
+        const filters = document.getElementById('filtersBarSection');
+        const workspace = document.getElementById('workspaceSection');
+        if (filters.nextElementSibling === workspace) {
+            wrapper.appendChild(filters);
+            filters.style.borderBottom = 'none'; filters.style.borderTop = '1px solid #dee2e6';
+        } else {
+            wrapper.insertBefore(filters, workspace);
+            filters.style.borderBottom = '1px solid #dee2e6'; filters.style.borderTop = 'none';
+        }
+    }
+
+    // --- DETALLE FILA ---
+    function showRowDetail(rowData) {
+        if(!rowData) return;
+        const label = rowData.NAME || rowData.A_LABEL || rowData.DESCRIPCION || "Elemento";
+        const id = rowData.ID || rowData.A_ID || rowData.CODIGO || "-";
+        
+        document.getElementById('canvasNodeLabel').innerText = label;
+        document.getElementById('canvasNodeId').innerText = id;
+        
+        let html = '<div class="table-responsive"><table class="table table-sm table-striped small border">';
+        for (const [key, value] of Object.entries(rowData)) {
+            if(value !== null && value !== "" && !key.startsWith("_")) {
+                html += `<tr><td class="fw-bold text-secondary text-uppercase" style="width: 40%;">${key.replace(/_/g, " ")}</td><td class="text-break text-dark">${value}</td></tr>`;
+            }
+        }
+        html += '</table></div>';
+        document.getElementById('detailProperties').innerHTML = html;
+        selectedNodeData = { id: id, label: label };
+        new bootstrap.Offcanvas(document.getElementById('nodeOffcanvas')).show();
     }
 
     let tomSelectInstance;
@@ -570,21 +642,11 @@
             preload: 'focus', placeholder: 'Escribe ID o Nombre...',
             create: false, maxItems: 1, plugins: ['dropdown_input'],
             onItemAdd: function() { this.setTextboxValue(''); },
-            load: function(query, callback) {
-                fetch('/api/search?q=' + encodeURIComponent(query || ''))
-                    .then(r => r.json()).then(json => callback(json)).catch(() => callback());
-            },
-            render: {
-                option: (item, escape) => `<div class="py-2 px-3 border-bottom"><div class="fw-bold text-dark">${escape(item.title)}</div><div class="small text-muted">${escape(item.label || 'Nodo')}</div></div>`,
-                item: (item, escape) => `<div>${escape(item.title)}</div>`
-            }
+            load: function(query, callback) { fetch('/api/search?q=' + encodeURIComponent(query || '')).then(r => r.json()).then(json => callback(json)).catch(() => callback()); },
+            render: { option: (item, escape) => `<div class="py-2 px-3 border-bottom"><div class="fw-bold text-dark">${escape(item.title)}</div><div class="small text-muted">${escape(item.label || 'Nodo')}</div></div>`, item: (item, escape) => `<div>${escape(item.title)}</div>` }
         });
-        {% if current_param %}
-            setTimeout(() => { tomSelectInstance.addOption({id: "{{current_param}}", title: "{{current_param_label}}"}); tomSelectInstance.setValue("{{current_param}}"); }, 100);
-        {% endif %}
-        
-        const savedConfig = localStorage.getItem("ai_config");
-        if(savedConfig) { try { aiConfig = JSON.parse(savedConfig); } catch(e){} }
+        {% if current_param %} setTimeout(() => { tomSelectInstance.addOption({id: "{{current_param}}", title: "{{current_param_label}}"}); tomSelectInstance.setValue("{{current_param}}"); }, 100); {% endif %}
+        const savedConfig = localStorage.getItem("ai_config"); if(savedConfig) { try { aiConfig = JSON.parse(savedConfig); } catch(e){} }
         loadTools();
     });
 
@@ -608,37 +670,27 @@
                 const bIdKey = keys.find(k => k.includes('B_ID'));
                 const aLabelKey = keys.find(k => k.includes('A_LABEL') || k === 'NAME' || k === 'DESCRIPCION' || k === 'EQUIPO');
                 const bLabelKey = keys.find(k => k.includes('B_LABEL'));
-                
-                const aId = r[aIdKey] || r.ID; 
-                const aLabel = r[aLabelKey] || aId;
+                const aId = r[aIdKey] || r.ID; const aLabel = r[aLabelKey] || aId;
                 
                 if(aId && !nodes.has(aId)) nodes.set(aId, {id:aId, label:aLabel, group:r.A_TYPE||'Default'});
                 
                 if(bIdKey && r[bIdKey]) {
-                    const bId = r[bIdKey]; 
-                    const bLabel = r[bLabelKey] || bId;
+                    const bId = r[bIdKey]; const bLabel = r[bLabelKey] || bId;
                     if(!nodes.has(bId)) nodes.set(bId, {id:bId, label:bLabel, group:r.B_TYPE||'Default'});
                     edges.push({from:aId, to:bId, label:r.RELACION||'', arrows:'to'});
                 }
             });
             network = new vis.Network(document.getElementById('network-container'), {
                 nodes: new vis.DataSet(Array.from(nodes.values())), edges: new vis.DataSet(edges)
-            }, { 
-                nodes: { shape: 'dot', font: { face: 'Segoe UI' } }, 
-                physics: { stabilization: false },
-                layout: { improvedLayout: true }
-            });
+            }, { nodes: { shape: 'dot', font: { face: 'Segoe UI' } }, physics: { stabilization: false }, layout: { improvedLayout: true } });
             network.on("click", p => {
                 if(p.nodes.length) {
-                    const n = nodes.get(p.nodes[0]);
-                    selectedNodeData = n;
-                    document.getElementById('canvasNodeLabel').innerText = n.label;
-                    document.getElementById('canvasNodeId').innerText = n.id;
-                    new bootstrap.Offcanvas(document.getElementById('nodeOffcanvas')).show();
+                    const n = nodes.get(p.nodes[0]); 
+                    const fakeRow = { NAME: n.label, ID: n.id, TYPE: n.group };
+                    showRowDetail(fakeRow);
                 }
             });
         }
-
         const numCol = cols.find(c => ['CANTIDAD','TOTAL','SCORE','PRECIO','STOCK'].some(k => c.includes(k)));
         const lblCol = cols.find(c => ['DESCRIPCION','NAME','EQUIPO'].some(k => c.includes(k))) || cols[0];
         if (numCol && rows.length && document.getElementById('mainChart')) {
@@ -650,33 +702,17 @@
         }
     {% endif %}
 
-    function exportCSV() {
-        if (typeof rows === 'undefined' || !rows.length) return alert("Sin datos");
-        const headers = cols.join(",");
-        const csvRows = rows.map(row => cols.map(c => `"${String(row[c]||'').replace(/"/g,'""')}"`).join(","));
-        const blob = new Blob(["\uFEFF" + [headers, ...csvRows].join("\r\n")], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement("a"); link.href = URL.createObjectURL(blob);
-        link.download = `nexus_export_${new Date().toISOString().slice(0,10)}.csv`; link.click();
-    }
-
-    function downloadGraphPNG() {
-        if (!network) return alert("No hay grafo visible");
-        const canvas = document.getElementById('network-container').getElementsByTagName('canvas')[0];
-        const temp = document.createElement('canvas'); temp.width = canvas.width; temp.height = canvas.height;
-        const ctx = temp.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0,0,temp.width,temp.height);
-        ctx.drawImage(canvas, 0, 0);
-        const link = document.createElement('a'); link.href = temp.toDataURL("image/png");
-        link.download = "grafo.png"; link.click();
-    }
-
+    function exportCSV() { if (typeof rows === 'undefined' || !rows.length) return alert("Sin datos"); const headers = cols.join(","); const csvRows = rows.map(row => cols.map(c => `"${String(row[c]||'').replace(/"/g,'""')}"`).join(",")); const blob = new Blob(["\uFEFF" + [headers, ...csvRows].join("\r\n")], { type: 'text/csv;charset=utf-8;' }); const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `nexus_export_${new Date().toISOString().slice(0,10)}.csv`; link.click(); }
+    function downloadGraphPNG() { if (!network) return alert("No hay grafo visible"); const canvas = document.getElementById('network-container').getElementsByTagName('canvas')[0]; const temp = document.createElement('canvas'); temp.width = canvas.width; temp.height = canvas.height; const ctx = temp.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0,0,temp.width,temp.height); ctx.drawImage(canvas, 0, 0); const link = document.createElement('a'); link.href = temp.toDataURL("image/png"); link.download = "grafo.png"; link.click(); }
     function setFocusFromCanvas() { if (selectedNodeData) updateSearchParam(selectedNodeData.id, selectedNodeData.label); }
 
-    // IA Logic
     const PROVIDERS = { openai: { url: "https://api.openai.com/v1/chat/completions", model: "gpt-4o" }, groq: { url: "https://api.groq.com/openai/v1/chat/completions", model: "llama3-70b-8192" }, ollama: { url: "http://localhost:11434/v1/chat/completions", model: "llama3" } };
     let aiConfig = { provider: 'openai', baseUrl: PROVIDERS.openai.url, model: PROVIDERS.openai.model, key: '' };
     let chatHistory = [{role: "system", content: "Eres un experto industrial."}];
     let availableTools = null;
-    function saveAiConfig() { aiConfig = { provider: document.getElementById('aiProviderSelect').value, baseUrl: document.getElementById('aiBaseUrl').value, model: document.getElementById('aiModelName').value, key: document.getElementById('aiApiKey').value }; localStorage.setItem("ai_config", JSON.stringify(aiConfig)); }
+    function updateProviderSettings() { const p = document.getElementById('aiProviderSelect').value; if(PROVIDERS[p]) { document.getElementById('aiBaseUrl').value = PROVIDERS[p].url; document.getElementById('aiModelName').value = PROVIDERS[p].model; } }
+    function triggerAiTool(name, id) { new bootstrap.Modal(document.getElementById('aiModal')).show(); let ctx = ""; if(tomSelectInstance && tomSelectInstance.getValue()) ctx = ` sobre "${tomSelectInstance.getValue()}"`; document.getElementById('userPrompt').value = `Usa "${name}"${ctx} y explica.`; }
+    function saveAiConfig() { aiConfig = { provider: document.getElementById('aiProviderSelect').value, baseUrl: document.getElementById('aiBaseUrl').value, model: document.getElementById('aiModelName').value, key: document.getElementById('aiApiKey').value }; localStorage.setItem("ai_config", JSON.stringify(aiConfig)); bootstrap.Collapse.getInstance(document.getElementById('configPanel'))?.hide(); }
     function loadTools() { fetch('/api/ai/tools').then(r=>r.json()).then(d=>availableTools=d); }
     function handleEnter(e) { if(e.key==='Enter') sendPrompt(); }
     async function sendPrompt() {
@@ -684,24 +720,22 @@
         appendMessage('user', inp.value); chatHistory.push({role:'user', content:inp.value}); inp.value=''; const tid = showTyping();
         try {
             const res = await fetch("/api/openai_proxy", { method:"POST", headers:{"Content-Type":"application/json","Authorization":`Bearer ${aiConfig.key}`,"x-base-url":aiConfig.baseUrl}, body:JSON.stringify({model:aiConfig.model, messages:chatHistory, tools:availableTools})});
-            const data = await res.json();
-            if(data.choices && data.choices[0].message.tool_calls) {
-                const tc = data.choices[0].message.tool_calls[0];
-                let args = JSON.parse(tc.function.arguments);
-                const tRes = await fetch('/api/execute', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({query_id:tc.function.name, param:args.param})});
-                const tData = await tRes.json();
-                chatHistory.push(data.choices[0].message);
-                chatHistory.push({role:'tool', tool_call_id:tc.id, name:tc.function.name, content:JSON.stringify(tData).slice(0, 500)});
+            const data = await res.json(); if(data.error) throw new Error(JSON.stringify(data.error));
+            const msg = data.choices[0].message; chatHistory.push(msg); removeTyping(tid);
+            if(msg.tool_calls) {
+                appendMessage('assistant', '<i>🔎 Ejecutando...</i>', true);
+                for(const tc of msg.tool_calls) {
+                    let args = {}; try { args=JSON.parse(tc.function.arguments); } catch(e){}
+                    const tRes = await fetch('/api/execute', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({query_id:tc.function.name, param:args.param})});
+                    const tData = await tRes.json(); chatHistory.push({role:'tool', tool_call_id:tc.id, name:tc.function.name, content:JSON.stringify(tData).slice(0, 500)});
+                }
+                showTyping();
                 const res2 = await fetch("/api/openai_proxy", { method:"POST", headers:{"Content-Type":"application/json","Authorization":`Bearer ${aiConfig.key}`,"x-base-url":aiConfig.baseUrl}, body:JSON.stringify({model:aiConfig.model, messages:chatHistory})});
                 const data2 = await res2.json(); removeTyping(tid); appendMessage('assistant', data2.choices[0].message.content); chatHistory.push(data2.choices[0].message);
-            } else { removeTyping(tid); appendMessage('assistant', data.choices[0].message.content); }
+            } else { appendMessage('assistant', msg.content); }
         } catch(e) { removeTyping(tid); appendMessage('system', "Error: "+e.message); }
     }
-    function appendMessage(role, text, temp) {
-        const div = document.createElement('div'); div.className = `d-flex align-items-start mb-3 ${role==='user'?'justify-content-end':''}`;
-        div.innerHTML = `<div class="${role==='user'?'bg-primary text-white':'bg-white border'} rounded p-3 shadow-sm" style="max-width:85%;">${text}</div>`;
-        document.getElementById('chatArea').append(div);
-    }
+    function appendMessage(role, text, temp) { const div = document.createElement('div'); div.className = `d-flex align-items-start mb-3 ${role==='user'?'justify-content-end':''}`; div.innerHTML = `<div class="${role==='user'?'bg-primary text-white':'bg-white border text-dark'} rounded p-3 shadow-sm" style="max-width:85%;">${text}</div>`; document.getElementById('chatArea').append(div); }
     function showTyping() { const id='t-'+Date.now(); appendMessage('system', '<div id="'+id+'">...</div>'); return id; }
     function removeTyping(id) { if(id) document.getElementById(id)?.parentElement?.parentElement?.remove(); }
 </script>
