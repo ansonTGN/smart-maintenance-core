@@ -1,27 +1,3 @@
-Esta es la versión definitiva y mejorada de templates/dashboard.html.
-
-Mejoras implementadas:
-
-Columnas Dinámicas: Ya no están "hardcoded". El sistema lee results.columns y genera la cabecera y las celdas automáticamente.
-
-Detección de Tipos de Datos:
-
-Si la columna se llama PRECIO, COSTO, STOCK, CANTIDAD, TOTAL, se alinea a la derecha y usa fuente monoespaciada.
-
-Si la columna se llama TIPO, TYPE, STATUS, CATEGORIA, se renderiza como una etiqueta (badge).
-
-La primera columna siempre se renderiza con el estilo de "Árbol" (Icono + Texto en negrita).
-
-Acciones Contextuales Inteligentes: El botón de "tres puntos" busca automáticamente un valor que parezca un ID en la fila para permitir el filtrado, sin importar cómo se llame la columna.
-
-Reemplaza todo el contenido de templates/dashboard.html:
-
-code
-Html
-play_circle
-download
-content_copy
-expand_less
 {% extends "base.html" %}
 
 {% block content %}
@@ -166,7 +142,7 @@ expand_less
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-brand">
             <div class="d-flex justify-content-between align-items-center">
-                <div><div class="brand-title">NEXUS INDUSTRIAL</div><div class="brand-subtitle text-white-50">v2024.34.6</div></div>
+                <div><div class="brand-title">TAM 4</div><div class="brand-subtitle text-white-50">v2024.34.6</div></div>
                 <button class="btn btn-sm text-white d-lg-none" onclick="toggleSidebar()"><i class="fa-solid fa-times"></i></button>
             </div>
             <div class="mt-2 text-white-50 small" style="font-size: 0.7rem;">Nexus Industrial Graph Analytics</div>
@@ -204,14 +180,7 @@ expand_less
                 <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-2" style="width:30px; height:30px;">
                     <i class="fa-solid fa-user text-white" style="font-size: 0.8rem;"></i>
                 </div>
-                
-<div>
-  <a href="https://angelurbinacv.netlify.app" style="text-decoration: none; color: inherit;">
-    <div class="fw-bold">Angel A. Urbina</div>
-    <div style="font-size: 0.7rem; opacity: 0.6;">Autor / Developer</div>
-  </a>
-</div>
-
+                <div><div class="fw-bold">Angel A. Urbina</div><div style="font-size: 0.7rem; opacity: 0.6;">Autor / Developer</div></div>
             </div>
         </div>
     </aside>
@@ -276,11 +245,11 @@ expand_less
                         <table class="tree-table">
                             <thead>
                                 <tr>
-                                    <!-- Cabecera Dinámica: Renderiza lo que venga del backend -->
+                                    <!-- Cabecera Dinámica corregida -->
                                     {% for col in results.columns %}
-                                        <th class="{% if col is containing('PRECIO') or col is containing('COSTO') or col is containing('STOCK') or col is containing('CANT') or col is containing('TOTAL') %}text-end{% endif %}">
+                                        <th class="{% if 'PRECIO' in col or 'COSTO' in col or 'STOCK' in col or 'CANT' in col or 'TOTAL' in col %}text-end{% endif %}">
                                             {{ col | replace(from="_", to=" ") }}
-                                            {% if col is containing('PRECIO') or col is containing('COSTO') %}<i class="fa-solid fa-euro-sign ms-1 text-muted" style="font-size:0.7em;"></i>{% endif %}
+                                            {% if 'PRECIO' in col or 'COSTO' in col %}<i class="fa-solid fa-euro-sign ms-1 text-muted" style="font-size:0.7em;"></i>{% endif %}
                                         </th>
                                     {% endfor %}
                                     <th style="width: 50px;"></th> <!-- Columna Acciones -->
@@ -297,11 +266,11 @@ expand_less
                                     {% for col in results.columns %}
                                         {% set val = row[col] %}
                                         
-                                        <!-- Lógica de renderizado por tipo de columna -->
+                                        <!-- Lógica de renderizado por tipo de columna (CORREGIDA CON 'in') -->
                                         {% if loop.first %}
                                             <!-- PRIMERA COLUMNA: Estilo Árbol Principal -->
                                             <td class="col-main">
-                                                {% if "Equipo" in row.B_TYPE or "Ubicacion" in row.B_TYPE or "Equipo" in row.A_TYPE %}
+                                                {% if row.B_TYPE and ("Equipo" in row.B_TYPE or "Ubicacion" in row.B_TYPE) %}
                                                     <i class="fa-regular fa-folder node-icon"></i>
                                                 {% else %}
                                                     <i class="fa-solid fa-cube text-secondary me-2 small"></i>
@@ -309,14 +278,14 @@ expand_less
                                                 {{ val }}
                                             </td>
 
-                                        {% elif col is containing("TYPE") or col is containing("TIPO") or col is containing("STATUS") or col is containing("ESTADO") %}
+                                        {% elif 'TYPE' in col or 'TIPO' in col or 'STATUS' in col or 'ESTADO' in col %}
                                             <!-- COLUMNAS TIPO/ESTADO: Badge -->
                                             <td class="col-badge">
                                                 <span class="badge bg-light text-secondary border">{{ val }}</span>
                                             </td>
 
-                                        {% elif col is containing("PRECIO") or col is containing("COSTO") or col is containing("STOCK") or col is containing("CANT") or col is containing("TOTAL") %}
-                                            <!-- COLUMNAS NUMÉRICAS: Alineación derecha + Monoespaciado -->
+                                        {% elif 'PRECIO' in col or 'COSTO' in col or 'STOCK' in col or 'CANT' in col or 'TOTAL' in col %}
+                                            <!-- COLUMNAS NUMÉRICAS: Alineación derecha -->
                                             <td class="col-numeric">
                                                 {{ val }}
                                             </td>
@@ -449,7 +418,6 @@ expand_less
         if (isGraphQuery && document.getElementById('network-container')) {
             const nodes = new Map(), edges = [];
             rows.forEach(r => {
-                // Buscamos propiedades dinámicamente
                 const keys = Object.keys(r);
                 const aIdKey = keys.find(k => k.includes('A_ID') || k === 'ID' || k === 'CODIGO');
                 const bIdKey = keys.find(k => k.includes('B_ID'));
