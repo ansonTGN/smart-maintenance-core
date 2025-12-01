@@ -1,7 +1,9 @@
 # =========================================================
 # ETAPA 1: BUILDER
 # =========================================================
-FROM rust:1.77-bookworm AS builder
+# CAMBIO IMPORTANTE: Usamos '1-bookworm' para obtener la última versión estable de Rust.
+# Si prefieres fijar versión, usa al menos rust:1.80-bookworm
+FROM rust:1-bookworm AS builder
 
 WORKDIR /app
 
@@ -12,12 +14,11 @@ COPY nexus-infra/Cargo.toml nexus-infra/
 COPY nexus-app/Cargo.toml nexus-app/
 
 # 2. Creamos código dummy para CADA miembro para poder compilar las dependencias.
-#    Cargo necesita encontrar un lib.rs o main.rs válido para cada miembro.
 RUN mkdir -p nexus-core/src && touch nexus-core/src/lib.rs && \
     mkdir -p nexus-infra/src && touch nexus-infra/src/lib.rs && \
     mkdir -p nexus-app/src && echo "fn main() {}" > nexus-app/src/main.rs
 
-# 3. Compilamos las dependencias (esto crea la capa cacheada pesada)
+# 3. Compilamos las dependencias (capa cacheada)
 RUN cargo build --release
 
 # 4. Borramos el código dummy para copiar el real
@@ -26,7 +27,7 @@ RUN rm -rf nexus-core/src nexus-infra/src nexus-app/src
 # 5. Copiamos el código fuente real
 COPY . .
 
-# 6. Forzamos a Cargo a notar el cambio en el archivo principal (a veces el timestamp de COPY engaña)
+# 6. Forzamos a Cargo a notar el cambio en el archivo principal
 RUN touch nexus-app/src/main.rs
 
 # 7. Compilamos el binario final
@@ -40,8 +41,7 @@ FROM debian:bookworm-slim AS runner
 
 WORKDIR /app
 
-# Instalar certificados CA para las peticiones HTTPS (Wikipedia, APIs externas, Neo4j Cloud)
-# y OpenSSL si alguna librería no usa rustls puro.
+# Instalar dependencias de sistema necesarias (SSL/TLS)
 RUN apt-get update && \
     apt-get install -y --no-install-recommends ca-certificates libssl-dev && \
     rm -rf /var/lib/apt/lists/*
@@ -54,8 +54,7 @@ ENV RUST_LOG="info" \
 # 1. Copiar el binario desde el builder
 COPY --from=builder /app/target/release/nexus-app /usr/local/bin/
 
-# 2. IMPORTANTE: Copiar los archivos estáticos requeridos en tiempo de ejecución
-#    Tu código lee "queries.json" y "templates/**/*"
+# 2. Copiar los archivos estáticos requeridos (plantillas y queries)
 COPY queries.json ./
 COPY templates ./templates
 
