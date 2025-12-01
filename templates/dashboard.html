@@ -577,6 +577,105 @@
     function showTyping() { const id='t-'+Date.now(); appendMessage('system', '<div id="'+id+'">...</div>'); return id; }
     function removeTyping(id) { if(id) document.getElementById(id)?.parentElement?.parentElement?.remove(); }
 
+    // =========================================================
+    // 1. FUNCIONALIDAD EXPORTAR CSV (TABLA)
+    // =========================================================
+    function exportCSV() {
+        // Verificamos si hay datos disponibles (inyectados por Tera)
+        if (typeof rows === 'undefined' || !rows || rows.length === 0) {
+            alert("No hay datos en la tabla para exportar.");
+            return;
+        }
+
+        // 1. Crear cabeceras
+        // Usamos 'cols' que ya tienes definido en el template
+        const headers = cols.join(",");
+
+        // 2. Crear cuerpo del CSV
+        const csvRows = rows.map(row => {
+            return cols.map(colName => {
+                // Obtenemos el valor, manejamos nulos
+                let cell = row[colName] === null || row[colName] === undefined ? "" : String(row[colName]);
+                
+                // Escapamos comillas dobles (reemplazar " por "") y envolvemos en comillas
+                // Esto es necesario si el texto contiene comas
+                cell = cell.replace(/"/g, '""');
+                return `"${cell}"`;
+            }).join(",");
+        });
+
+        // 3. Unir todo con saltos de línea
+        const csvContent = [headers, ...csvRows].join("\r\n");
+
+        // 4. Crear Blob y descargar
+        // \uFEFF es el BOM para que Excel reconozca UTF-8 correctamente
+        const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", `nexus_export_${new Date().toISOString().slice(0,10)}.csv`);
+        document.body.appendChild(link);
+        
+        link.click();
+        
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    }
+
+    // =========================================================
+    // 2. FUNCIONALIDAD EXPORTAR PNG (GRAFO VIS.JS)
+    // =========================================================
+    function downloadGraphPNG() {
+        // Verificamos si la red existe
+        if (!network) {
+            alert("No se ha generado ningún grafo visual para exportar.");
+            return;
+        }
+
+        // Vis.js dibuja en un canvas HTML5 estándar
+        // Necesitamos esperar a que termine de dibujar por seguridad, 
+        // aunque el onclick suele ser post-render.
+        
+        // Obtenemos el canvas específico dentro del contenedor
+        const canvasContext = document.getElementById('network-container').getElementsByTagName('canvas')[0];
+        
+        if (!canvasContext) {
+            alert("Error al obtener el lienzo del grafo.");
+            return;
+        }
+
+        // TRUCO: Los canvas de Vis.js suelen tener fondo transparente.
+        // Si lo descargas directamente, se verá negro en muchos visores.
+        // Creamos un canvas temporal para ponerle fondo blanco.
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = canvasContext.width;
+        tempCanvas.height = canvasContext.height;
+        const ctx = tempCanvas.getContext('2d');
+
+        // 1. Rellenar fondo blanco
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+
+        // 2. Dibujar el grafo encima
+        ctx.drawImage(canvasContext, 0, 0);
+
+        // 3. Generar enlace de descarga
+        try {
+            const imageUrl = tempCanvas.toDataURL("image/png");
+            
+            const link = document.createElement('a');
+            link.download = `nexus_graph_${new Date().toISOString().slice(0,19).replace(/:/g,"-")}.png`;
+            link.href = imageUrl;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } catch (err) {
+            console.error(err);
+            alert("Error al generar la imagen. Es posible que el navegador bloquee descargas de canvas muy grandes.");
+        }
+    }
+
     // ---- RENDERIZADO VISUAL ----
     {% if results %}
         const rows = {{ results.rows | json_encode() | safe }};
